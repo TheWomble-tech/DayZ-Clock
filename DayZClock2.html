@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Walking Dead 10x Loot In Game Clock</title>
+  <style>
+    :root {
+      --day-bg: white;
+      --day-text: black;
+      --night-bg: #003300;
+      --night-text: #90ee90;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      color: white;
+      transition: background-color 1s, color 1s;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      font-size: 2.2em;
+      margin-bottom: 10px;
+    }
+
+    #clock {
+      font-size: 4em;
+      margin: 20px 0;
+    }
+
+    #mode {
+      font-size: 1.5em;
+      margin-bottom: 20px;
+    }
+
+    .day {
+      background-color: var(--day-bg);
+      color: var(--day-text);
+    }
+
+    .night {
+      background-color: var(--night-bg);
+      color: var(--night-text);
+    }
+
+    @media (max-width: 500px) {
+      h1 {
+        font-size: 1.5em;
+      }
+
+      #clock {
+        font-size: 3em;
+      }
+
+      #mode {
+        font-size: 1.2em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Walking Dead 10x Loot In Game Clock</h1>
+    <div id="clock">--:--:--</div>
+    <div id="mode"></div>
+  </div>
+
+  <script>
+    const START_SIM_TIME = "16:00:00"; // Simulated start time
+
+    // Real seconds per simulated hour
+    const DAY_REAL_SECONDS_PER_SIM_HOUR = 900;  // 15 minutes
+    const NIGHT_REAL_SECONDS_PER_SIM_HOUR = 120; // 2 minutes
+
+    const DAY_SPEED = 3600 / DAY_REAL_SECONDS_PER_SIM_HOUR;
+    const NIGHT_SPEED = 3600 / NIGHT_REAL_SECONDS_PER_SIM_HOUR;
+
+    function parseTimeToSeconds(str) {
+      const [h, m, s] = str.split(":").map(Number);
+      return h * 3600 + m * 60 + s;
+    }
+
+    function formatTime(seconds) {
+      const h = String(Math.floor(seconds / 3600) % 24).padStart(2, "0");
+      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+      const s = String(Math.floor(seconds % 60)).padStart(2, "0");
+      return `${h}:${m}:${s}`;
+    }
+
+    function isDaytime(hour) {
+      return hour >= 7 && hour < 19;
+    }
+
+    let simTimeSeconds = parseTimeToSeconds(START_SIM_TIME);
+    let lastRealTime = null;
+
+    function tick() {
+      const now = Date.now();
+      if (lastRealTime === null) {
+        lastRealTime = now;
+        requestAnimationFrame(tick);
+        return;
+      }
+
+      const deltaRealSeconds = (now - lastRealTime) / 1000;
+      lastRealTime = now;
+
+      const currentHour = Math.floor(simTimeSeconds / 3600) % 24;
+      const simSpeed = isDaytime(currentHour) ? DAY_SPEED : NIGHT_SPEED;
+
+      // Advance simulated time using correct speed
+      simTimeSeconds += deltaRealSeconds * simSpeed;
+      simTimeSeconds %= 86400;
+
+      document.getElementById("clock").textContent = formatTime(simTimeSeconds);
+
+      const modeText = isDaytime(currentHour)
+        ? "☀ DAYTIME (15 min/hr)"
+        : "🌙 NIGHTTIME (2 min/hr)";
+      document.getElementById("mode").textContent = modeText;
+
+      document.body.classList.toggle("day", isDaytime(currentHour));
+      document.body.classList.toggle("night", !isDaytime(currentHour));
+
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  </script>
+</body>
+</html>
